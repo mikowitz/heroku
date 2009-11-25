@@ -25,7 +25,7 @@ module Heroku::Command
 				client.cmd_send
 			end
 		end
-
+		
 		def reset
 			if !autodetected_app
 				info = heroku.info(app)
@@ -45,12 +45,16 @@ module Heroku::Command
 		protected
 
 		def parse_database_yml
-			return "" unless File.exists?(Dir.pwd + '/config/database.yml')
-
 			environment = ENV['RAILS_ENV'] || ENV['MERB_ENV'] || ENV['RACK_ENV']
 			environment = 'development' if environment.nil? or environment.empty?
 
-			conf = YAML.load(File.read(Dir.pwd + '/config/database.yml'))[environment]
+      conf = {}
+      if File.exists?(Dir.pwd + "/config/database.yml")
+			  conf = YAML.load(File.read(Dir.pwd + '/config/database.yml'))[environment]
+		  else
+		    conf = YAML.load(File.read(Dir.pwd + "/config/#{environment}/database.yml"))[environment]
+	    end
+	    
 			case conf['adapter']
 				when 'sqlite3'
 					return "sqlite://#{conf['database']}"
